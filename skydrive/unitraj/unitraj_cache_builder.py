@@ -86,7 +86,11 @@ class SongdoCacheBuilder(BaseDataset):
                     # if DEBUG:
                     #     session_files = session_files[:2*process_num] # for debug
                     data_splits = np.array_split(session_files, process_num)
-                    data_splits = [(split_name, list(data_splits[i]))for i in range(process_num)]
+                    processed_root = str(data_path.parent)
+                    data_splits = [
+                        (split_name, list(data_splits[i]), processed_root)
+                        for i in range(process_num)
+                    ]
                     os.makedirs('tmp/{}'.format(self.method_name), exist_ok=True)
                     for i in range(process_num):
                         with open(os.path.join('tmp/{}'.format(self.method_name), '{}.pkl'.format(i)), 'wb') as f:
@@ -123,8 +127,8 @@ class SongdoCacheBuilder(BaseDataset):
         with open(os.path.join('tmp/{}'.format(self.method_name), '{}.pkl'.format(worker_index)), 'rb') as f:
             data_chunk = pickle.load(f)
         file_list = {}
-        split_name, session_files = data_chunk
-        scene_loader = SongdoSceneLoader()
+        split_name, session_files, processed_root = data_chunk
+        scene_loader = SongdoSceneLoader(processed_folder=processed_root)
         converter = UniTrajConverter()
         hdf5_path = os.path.join(self.cache_path, f'{worker_index}.h5')
 
