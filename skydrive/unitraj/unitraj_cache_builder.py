@@ -52,6 +52,10 @@ class SongdoCacheBuilder(BaseDataset):
 
         return session_files
 
+    def get_worker_chunk_dir(self) -> str:
+        """Store worker task chunks under the active cache directory, not the repo root."""
+        return os.path.join(self.cache_path, '.chunks')
+
     def load_data(self):
         """ Similar to the load_data function in BaseDataset, but read data list differently """
         self.data_loaded = {}
@@ -91,9 +95,10 @@ class SongdoCacheBuilder(BaseDataset):
                         (split_name, list(data_splits[i]), processed_root)
                         for i in range(process_num)
                     ]
-                    os.makedirs('tmp/{}'.format(self.method_name), exist_ok=True)
+                    worker_chunk_dir = self.get_worker_chunk_dir()
+                    os.makedirs(worker_chunk_dir, exist_ok=True)
                     for i in range(process_num):
-                        with open(os.path.join('tmp/{}'.format(self.method_name), '{}.pkl'.format(i)), 'wb') as f:
+                        with open(os.path.join(worker_chunk_dir, '{}.pkl'.format(i)), 'wb') as f:
                             pickle.dump(data_splits[i], f)
 
                     # results = self.process_data_chunk(0) # for debug
@@ -108,7 +113,7 @@ class SongdoCacheBuilder(BaseDataset):
                         pickle.dump(file_list, f)
                     
                     # delete the temporary files one the file list is saved
-                    shutil.rmtree('tmp/{}'.format(self.method_name))
+                    shutil.rmtree(worker_chunk_dir)
 
                     data_list = list(file_list.items())
                     np.random.shuffle(data_list)
@@ -124,7 +129,7 @@ class SongdoCacheBuilder(BaseDataset):
 
     def process_data_chunk(self, worker_index):
         """Cache one chunk of Songdo monitoring sessions into the standard HDF5 format."""
-        with open(os.path.join('tmp/{}'.format(self.method_name), '{}.pkl'.format(worker_index)), 'rb') as f:
+        with open(os.path.join(self.get_worker_chunk_dir(), '{}.pkl'.format(worker_index)), 'rb') as f:
             data_chunk = pickle.load(f)
         file_list = {}
         split_name, session_files, processed_root = data_chunk
