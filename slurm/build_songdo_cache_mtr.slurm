@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --partition=cpu
+#SBATCH --partition=gpu
 
 set -euo pipefail
 
@@ -26,6 +26,13 @@ UNITRAJ_CONFIG_DIR=$WORKROOT/UniTraj_Songdo/unitraj/configs
 TRAIN_DATA=/scratch/izar/ke/songdo_drive/train
 VAL_DATA=/scratch/izar/ke/songdo_drive/test
 CACHE_ROOT=/scratch/izar/ke/songdo_cache/mtr
+
+for required_dir in "$SKYDRIVE_ROOT" "$UNITRAJ_CONFIG_DIR" "$TRAIN_DATA" "$VAL_DATA"; do
+  if [ ! -d "$required_dir" ]; then
+    echo "Missing required directory: $required_dir" >&2
+    exit 1
+  fi
+done
 
 cd "$SKYDRIVE_ROOT"
 
