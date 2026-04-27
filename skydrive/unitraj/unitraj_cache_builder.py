@@ -228,6 +228,66 @@ if __name__ == '__main__':
         default=16,
         help='Number of worker processes to use.',
     )
+    parser.add_argument(
+        '--map-range',
+        type=float,
+        default=None,
+        help='Override the map crop range used during cache construction.',
+    )
+    parser.add_argument(
+        '--max-num-roads',
+        type=int,
+        default=None,
+        help='Override the maximum number of map polylines kept per scene.',
+    )
+    parser.add_argument(
+        '--max-points-per-lane',
+        type=int,
+        default=None,
+        help='Override the maximum points kept per lane when manually_split_lane is disabled.',
+    )
+    parser.add_argument(
+        '--manually-split-lane',
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help='Override whether the dataset should manually split lanes before selecting map tokens.',
+    )
+    parser.add_argument(
+        '--point-sampled-interval',
+        type=int,
+        default=None,
+        help='Override the point sampling interval used when manually_split_lane is enabled.',
+    )
+    parser.add_argument(
+        '--num-points-each-polyline',
+        type=int,
+        default=None,
+        help='Override the points kept for each polyline chunk when manually_split_lane is enabled.',
+    )
+    parser.add_argument(
+        '--vector-break-dist-thresh',
+        type=float,
+        default=None,
+        help='Override the distance threshold used to split sparse lane polylines.',
+    )
+    parser.add_argument(
+        '--map-perturb-xy-std',
+        type=float,
+        default=0.0,
+        help='Apply deterministic Gaussian xy jitter with this standard deviation in meters.',
+    )
+    parser.add_argument(
+        '--map-perturb-shift-std',
+        type=float,
+        default=0.0,
+        help='Apply deterministic per-polyline lateral offsets with this standard deviation in meters.',
+    )
+    parser.add_argument(
+        '--map-perturb-seed',
+        type=int,
+        default=42,
+        help='Base seed used to derive deterministic map perturbations per scene.',
+    )
     args = parser.parse_args()
     print('Arguments parsed:')
     print(args)
@@ -246,6 +306,24 @@ if __name__ == '__main__':
     config.val_data_path = args.val_data_path
     config.cache_path = args.cache_path
     config.only_train_on_ego = True
+    if args.map_range is not None:
+        config.map_range = args.map_range
+    if args.max_num_roads is not None:
+        config.max_num_roads = args.max_num_roads
+    if args.max_points_per_lane is not None:
+        config.max_points_per_lane = args.max_points_per_lane
+    if args.manually_split_lane is not None:
+        config.manually_split_lane = args.manually_split_lane
+    if args.point_sampled_interval is not None:
+        config.point_sampled_interval = args.point_sampled_interval
+    if args.num_points_each_polyline is not None:
+        config.num_points_each_polyline = args.num_points_each_polyline
+    if args.vector_break_dist_thresh is not None:
+        config.vector_break_dist_thresh = args.vector_break_dist_thresh
+
+    config.map_perturb_xy_std = args.map_perturb_xy_std
+    config.map_perturb_shift_std = args.map_perturb_shift_std
+    config.map_perturb_seed = args.map_perturb_seed
 
     print('Creating training cache for method {}...'.format(method_name))
     builder = SongdoCacheBuilder(config=config, method_name=method_name, is_validation=False, num_workers=args.num_workers)
